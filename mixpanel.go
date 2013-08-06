@@ -50,6 +50,9 @@ func NewMixpanel(token string) *Mixpanel {
 }
 
 func (this *P) Update(other *P) *P {
+	if other == nil{
+		return this
+	}
 	for k, v := range *other {
 		(*this)[k] = v
 	}
@@ -108,8 +111,18 @@ or experimental features of people analytics from python
 The Mixpanel HTTP tracking API is documented at
 https://mixpanel.com/help/reference/http
 */
-func (mp *Mixpanel) PeopleUpdate(alias_id string, properties *P) error {
-	return nil
+func (mp *Mixpanel) PeopleUpdate(properties *P) error {
+	record := &P{
+		"$token": mp.Token,
+		"$time": int(time.Now().UTC().Unix()),
+	}
+	record.Update(properties)
+
+	data, err := json.Marshal(record)
+	if err != nil {
+		return err
+	}	
+	return mp.c.Send("people", data)
 }
 
 /*
@@ -193,6 +206,58 @@ func (mp *Mixpanel) PeopleUnion(id string, properties *P) error {
 	})
 }
 
+/*
+PeopleUnset removes properties from a profile.
+
+Takes a JSON list of string property names, and permanently removes the
+properties and their values from a profile.
+Example:
+    mp.PeopleUnset("12345", ["Days Overdue"])
+*/
+func (mp *Mixpanel) PeopleUnset(id string, properties []string) error {
+	return mp.PeopleUpdate(&P{
+		"$distinct_id": id,
+		"$unset" : properties,
+	})
+}
+
+/*
+PeopleDelete permanently deletes a profile.
+
+Permanently delete the profile from Mixpanel, along with all of its
+properties.
+Example:
+    mp.PeopleDelete("12345")
+*/
+func (mp *Mixpanel) PeopleDelete(id string) error {
+	return mp.PeopleUpdate(&P{
+		"$distinct_id": id,
+		"$delete":"",
+	})
+}
+
+/*
+PeopleTrackCharge Tracks a charge to a user.
+
+Record that you have charged the current user a certain amount of
+money. Charges recorded with track_charge will appear in the Mixpanel
+revenue report.
+Example:
+    //tracks a charge of $50 to user '1234'
+    mp.PeopleTrackCharge("1234", 50, nil)
+
+    //tracks a charge of $50 to user '1234' at a specific time
+    mp.PeopleTrackCharge("1234", 50, {"$time": "2013-04-01T09:02:00"})
+*/            
+func (mp *Mixpanel) PeopleTrackCharge(id string, amount float64, prop *P) error {
+	if prop == nil {
+		prop = &P{}
+	}
+	prop.Update(&P{"$amount": amount})
+	return mp.PeopleAppend(id, &P{
+		"$transactions": prop,
+	})
+}
 
 
 func parseJsonResponse(resp *http.Response) error {

@@ -9,8 +9,8 @@ const token string = "e919dea023855e3c8e2ea46a38e4032c"
 func TestUpdate(t *testing.T) {
 	p := &P{}
 	p.Update(&P{
-		"Test" : "Test",
-		})
+		"Test": "Test",
+	})
 
 	if _, ok := (*p)["Test"]; !ok {
 		t.Error("Expected Test got %*v", *p)
@@ -31,15 +31,22 @@ func TestTrack(t *testing.T) {
 	}
 }
 
-func TestSmoke(t *testing.T){
+func TestSmoke(t *testing.T) {
 	mp := NewMixpanel(token)
 	err := mp.PeopleSet("12345", &P{"Address": "1313 Mockingbird Lane",
-                            "Birthday": "1948-01-01"})
+		"Birthday": "1948-01-01"})
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = mp.PeopleSetOnce("12345", &P{"First Login": "2013-04-01T13:20:00"})	
+	err = mp.PeopleAppend("12345", &P{
+		"Favorite Fruits": "Apples",
+	})
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = mp.PeopleSetOnce("12345", &P{"First Login": "2013-04-01T13:20:00"})
 	if err != nil {
 		t.Error(err)
 	}
@@ -49,14 +56,44 @@ func TestSmoke(t *testing.T){
 		t.Error(err)
 	}
 
-	err = mp.PeopleAppend("12345", &P{ "Power Ups": "Bubble Lead" })
+	err = mp.PeopleAppend("12345", &P{"Power Ups": "Bubble Lead"})
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = mp.PeopleUnion("12345", &P{ "Items purchased": ["socks", "shirts"] } )
+	err = mp.PeopleUnion("12345", &P{"Items purchased": []string{"socks", "shirts"}})
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = mp.PeopleUnset("12345", []string{"Days Overdue"})
+	if err != nil {
+		t.Error(err)
+	}
+
+	//tracks a charge of $50 to user '1234'
+	err = mp.PeopleTrackCharge("1234", 50, nil)
+	if err != nil {
+		t.Error(err)
+	}
+
+	//tracks a charge of $50 to user '1234' at a specific time
+	err = mp.PeopleTrackCharge("1234", 50, &P{"$time": "2013-04-01T09:02:00"})
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = mp.PeopleTrackCharge("12345", 9.99, nil)
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = mp.PeopleTrackCharge("12345", 30.50, &P{
+		"$time":            "2013-01-02T09:32:00",
+		"Product Category": "Shoes",
+	})
+
 	if err != nil {
 		t.Error(err)
 	}
 }
-
