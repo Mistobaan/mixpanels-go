@@ -39,6 +39,22 @@ func TestSmoke(t *testing.T) {
 		t.Error(err)
 	}
 
+	// Track that user "12345"'s credit card was declined
+	err = mp.Track("12345", "Credit Card Declined", nil)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Properties describe the circumstances of the event,
+	// or aspects of the source or user associated with the event
+	err = mp.Track("12345", "Welcome Email Sent", &P{
+	  "Email Template" : "Pretty Pink Welcome",
+	  "User Sign-up Cohort" : "July 2013",
+	 })
+	if err != nil {
+		t.Error(err)
+	}
+
 	err = mp.PeopleAppend("12345", &P{
 		"Favorite Fruits": "Apples",
 	})
