@@ -122,7 +122,7 @@ Example:
                             "Birthday": "1948-01-01"})
 */
 func (mp *Mixpanel) PeopleSet(id string, properties *P) error {
-	return mp.PeopleUpdate(id, &P{
+	return mp.PeopleUpdate(&P{
 		"$distinct_id": id,
 		"$set" : properties,
 		})
@@ -138,11 +138,61 @@ Example:
     mp.PeopleSetOnce("12345", &P{"First Login": "2013-04-01T13:20:00"})
 */
 func (mp *Mixpanel) PeopleSetOnce(id string, properties *P) error {
-	return mp.PeopleUpdate(id, &P{
+	return mp.PeopleUpdate(&P{
 		"$distinct_id": id,
 		"$set" : properties,
 	})
 }
+
+/*
+PeopleIncrement Increments/decrements numerical properties of people record.
+
+Takes in JSON object with keys and numerical values. Adds numerical
+values to current property of profile. If property doesn't exist adds
+value to zero. Takes in negative values for subtraction.
+Example:
+    mp.PeopleIncrement("12345", &P{"Coins Gathered": 12})
+*/
+func (mp *Mixpanel) PeopleIncrement(id string, properties *P) error {
+	return mp.PeopleUpdate(&P{
+		"$distinct_id": id,
+		"$add" : properties,
+	})
+}
+
+/*
+PeopleAppend appends to the list associated with a property.
+
+Takes a JSON object containing keys and values, and appends each to a
+list associated with the corresponding property name. $appending to a
+property that doesn't exist will result in assigning a list with one
+element to that property.
+Example:
+    mp.PeopleAppend("12345", &P{ "Power Ups": "Bubble Lead" })
+*/
+func (mp *Mixpanel) PeopleAppend(id string, properties *P) error {
+	return mp.PeopleUpdate(&P{
+		"$distinct_id": id,
+		"$append" : properties,
+	})
+}
+
+/*
+PeopleUnion Merges the values for a list associated with a property.
+
+Takes a JSON object containing keys and list values. The list values in
+the request are merged with the existing list on the user profile,
+ignoring duplicate list values.
+Example:
+    mp.PeopleUnion("12345", &P{ "Items purchased": ["socks", "shirts"] } )
+*/
+func (mp *Mixpanel) PeopleUnion(id string, properties *P) error {
+	return mp.PeopleUpdate(&P{
+		"$distinct_id": id,
+		"$union" : properties,
+	})
+}
+
 
 
 func parseJsonResponse(resp *http.Response) error {

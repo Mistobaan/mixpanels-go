@@ -31,7 +31,7 @@ func TestTrack(t *testing.T) {
 	}
 }
 
-func TestSmoke(t *testing.T) {
+func TestSmoke(t *testing.T){
 	mp := NewMixpanel(token)
 	err := mp.PeopleSet("12345", &P{"Address": "1313 Mockingbird Lane",
                             "Birthday": "1948-01-01"})
@@ -40,6 +40,21 @@ func TestSmoke(t *testing.T) {
 	}
 
 	err = mp.PeopleSetOnce("12345", &P{"First Login": "2013-04-01T13:20:00"})	
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = mp.PeopleIncrement("12345", &P{"Coins Gathered": 12})
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = mp.PeopleAppend("12345", &P{ "Power Ups": "Bubble Lead" })
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = mp.PeopleUnion("12345", &P{ "Items purchased": ["socks", "shirts"] } )
 	if err != nil {
 		t.Error(err)
 	}
