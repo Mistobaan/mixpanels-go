@@ -153,10 +153,10 @@ func parseJsonResponse(resp *http.Response) error {
 
 	if err := json.Unmarshal(buff.Bytes(), &response); err == nil{
 		if value, ok := response["status"]; ok {
-			if value.(string) == "1" {
+			if value.(float64) == 1 {
 				return nil
 			} else {
-				return errors.New("Mixpanel error: " + response["error"].(string))
+				return errors.New( fmt.Sprintf("Mixpanel error: %s", response["error"]))
 			}
 		} else {
 			return errors.New("Could not find field 'status' api change ?")
