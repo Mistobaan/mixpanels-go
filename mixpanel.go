@@ -1,6 +1,8 @@
 package mixpanel
 
 import (
+	"fmt"
+	"strconv"
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
@@ -14,8 +16,8 @@ import (
 type P map[string]string
 
 type Event struct {
-	Event      string `json:event`
-	Properties *P     `json:properties`
+	Event      string `json:"event"`
+	Properties *P     `json:"properties"`
 }
 
 type Mixpanel struct {
@@ -46,29 +48,42 @@ func (this *P) Update(other *P) *P {
 	return this
 }
 
-// Track 
+// Track
 func (mix *Mixpanel) Track(distinct_id, event string, prop *P) error {
 	track_url, err := url.Parse(track_endpoint)
 	if err != nil {
 		return err
 	}
 
+	properties := &P{
+		"token":        mix.Token,
+		"distinct_id":  distinct_id,
+		"time":         strconv.FormatInt(time.Now().UTC().Unix(), 10),
+		"mp_lib":       "go",
+		"$lib_version": "1.0",
+	}
+	if prop == nil {
+		prop = &P{}
+	}
+
+	properties.Update(prop)
+
 	data, err := json.Marshal(&Event{
-		Event: event,
-		Properties: &P{
-			"token":        mix.Token,
-			"distinct_id":  distinct_id,
-			"time":         time.Now().UTC().Format(time.UnixDate),
-			"mp_lib":       "go",
-			"$lib_version": "1.0",
-		},
+		Event:      event,
+		Properties: properties,
 	})
 	if err != nil {
 		return err
 	}
 
-	track_url.Query().Add("data", string(b64(data)))
-	track_url.Query().Add("verbose", "1")
+	io.Copy(os.Stdout, bytes.NewBuffer(data))
+
+	q := track_url.Query()
+	q.Add("data", string(b64(data)))
+	q.Add("verbose", "0")
+	track_url.RawQuery = q.Encode()
+
+	fmt.Printf("\n%s\n", track_url.String())
 
 	resp, err := http.Get(track_url.String())
 
