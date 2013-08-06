@@ -45,7 +45,9 @@ func TestJsonArray(t *testing.T){
 func TestSmoke(t *testing.T){
 	Smoke(t, NewMixpanel(token))
 	Smoke(t, NewMixpanelWithConsumer(token, NewBuffConsumer(1)))
-	Smoke(t, NewMixpanelWithConsumer(token, NewBuffConsumer(2)))
+	mp := NewBuffConsumer(2)
+	Smoke(t, NewMixpanelWithConsumer(token, mp))
+	mp.Flush()
 }
 
 
