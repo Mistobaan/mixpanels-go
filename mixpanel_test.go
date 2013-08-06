@@ -31,10 +31,26 @@ func TestTrack(t *testing.T) {
 	}
 }
 
+func TestJsonArray(t *testing.T){
+	result := jsonArray( [][]byte{ []byte("{'a':'b'}")} )
+	if string(result) != "[{'a':'b'}]" {
+		t.Error(string(result))
+	}
+	result = jsonArray( [][]byte{ []byte("{'a':'b'}"), []byte("{'c':'d'}")} )
+	if string(result) != "[{'a':'b'},{'c':'d'}]" {
+		t.Error(string(result))
+	}	
+}
+
 func TestSmoke(t *testing.T) {
 	mp := NewMixpanel(token)
 	err := mp.PeopleSet("12345", &P{"Address": "1313 Mockingbird Lane",
 		"Birthday": "1948-01-01"})
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = mp.Alias("amy@mixpanel.com", "13793")
 	if err != nil {
 		t.Error(err)
 	}

@@ -1,15 +1,15 @@
 package mixpanel
 
 import (
-	"fmt"
-	"errors"
-	"io"
-	"strconv"
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 )
 
@@ -17,7 +17,7 @@ type P map[string]interface{}
 
 // Update replaces all the elements of the map
 func (this *P) Update(other *P) *P {
-	if other == nil{
+	if other == nil {
 		return this
 	}
 	for k, v := range *other {
@@ -36,9 +36,9 @@ type Consumer interface {
 }
 
 type Mixpanel struct {
-	Token string `json:token`
-	verbose bool 
-	c Consumer
+	Token   string `json:token`
+	verbose bool
+	c       Consumer
 }
 
 const events_endpoint string = "https://api.mixpanel.com/track"
@@ -57,7 +57,7 @@ NewMixpanel Creates a new Mixpanel object, which can be used for all tracking.
 
 To use mixpanel, create a new Mixpanel object using your
 token.  Takes in a user token and uses a StdConsumer
- */
+*/
 func NewMixpanel(token string) *Mixpanel {
 	return NewMixpanelWithConsumer(token, NewStdConsumer())
 }
@@ -70,12 +70,12 @@ token.  Takes in a user token and an optional Consumer (or
 anything else with a send() method). If no consumer is
 provided, Mixpanel will use the default Consumer, which
 communicates one synchronous request for every message.
- */
+*/
 func NewMixpanelWithConsumer(token string, c Consumer) *Mixpanel {
 	return &Mixpanel{
-		Token: token,
+		Token:   token,
 		verbose: true,
-		c: c,
+		c:       c,
 	}
 }
 
@@ -129,12 +129,12 @@ with a new id, so that events and profile updates associated with the
 new id will be associated with the existing user's profile and behavior.
 Example:
     mp.Alias("amy@mixpanel.com", "13793")
-*/        
+*/
 func (mp *Mixpanel) Alias(alias_id, original_id string) error {
 	return mp.Track(original_id, "$create_alias", &P{
-            "distinct_id": original_id,
-            "alias": alias_id,
-        })
+		"distinct_id": original_id,
+		"alias":       alias_id,
+	})
 }
 
 /*
@@ -150,14 +150,14 @@ https://mixpanel.com/help/reference/http
 func (mp *Mixpanel) PeopleUpdate(properties *P) error {
 	record := &P{
 		"$token": mp.Token,
-		"$time": int(time.Now().UTC().Unix()),
+		"$time":  int(time.Now().UTC().Unix()),
 	}
 	record.Update(properties)
 
 	data, err := json.Marshal(record)
 	if err != nil {
 		return err
-	}	
+	}
 	return mp.c.Send("people", data)
 }
 
@@ -173,8 +173,8 @@ Example:
 func (mp *Mixpanel) PeopleSet(id string, properties *P) error {
 	return mp.PeopleUpdate(&P{
 		"$distinct_id": id,
-		"$set" : properties,
-		})
+		"$set":         properties,
+	})
 }
 
 /*
@@ -189,7 +189,7 @@ Example:
 func (mp *Mixpanel) PeopleSetOnce(id string, properties *P) error {
 	return mp.PeopleUpdate(&P{
 		"$distinct_id": id,
-		"$set" : properties,
+		"$set":         properties,
 	})
 }
 
@@ -205,7 +205,7 @@ Example:
 func (mp *Mixpanel) PeopleIncrement(id string, properties *P) error {
 	return mp.PeopleUpdate(&P{
 		"$distinct_id": id,
-		"$add" : properties,
+		"$add":         properties,
 	})
 }
 
@@ -222,7 +222,7 @@ Example:
 func (mp *Mixpanel) PeopleAppend(id string, properties *P) error {
 	return mp.PeopleUpdate(&P{
 		"$distinct_id": id,
-		"$append" : properties,
+		"$append":      properties,
 	})
 }
 
@@ -238,7 +238,7 @@ Example:
 func (mp *Mixpanel) PeopleUnion(id string, properties *P) error {
 	return mp.PeopleUpdate(&P{
 		"$distinct_id": id,
-		"$union" : properties,
+		"$union":       properties,
 	})
 }
 
@@ -253,7 +253,7 @@ Example:
 func (mp *Mixpanel) PeopleUnset(id string, properties []string) error {
 	return mp.PeopleUpdate(&P{
 		"$distinct_id": id,
-		"$unset" : properties,
+		"$unset":       properties,
 	})
 }
 
@@ -268,7 +268,7 @@ Example:
 func (mp *Mixpanel) PeopleDelete(id string) error {
 	return mp.PeopleUpdate(&P{
 		"$distinct_id": id,
-		"$delete":"",
+		"$delete":      "",
 	})
 }
 
@@ -284,7 +284,7 @@ Example:
 
     //tracks a charge of $50 to user '1234' at a specific time
     mp.PeopleTrackCharge("1234", 50, {"$time": "2013-04-01T09:02:00"})
-*/            
+*/
 func (mp *Mixpanel) PeopleTrackCharge(id string, amount float64, prop *P) error {
 	if prop == nil {
 		prop = &P{}
@@ -295,32 +295,33 @@ func (mp *Mixpanel) PeopleTrackCharge(id string, amount float64, prop *P) error 
 	})
 }
 
-
 func parseJsonResponse(resp *http.Response) error {
 	type jsonResponseT map[string]interface{}
 	var response jsonResponseT
 	var buff bytes.Buffer
 	io.Copy(&buff, resp.Body)
 
-	if err := json.Unmarshal(buff.Bytes(), &response); err == nil{
+	if err := json.Unmarshal(buff.Bytes(), &response); err == nil {
 		if value, ok := response["status"]; ok {
 			if value.(float64) == 1 {
 				return nil
 			} else {
-				return errors.New( fmt.Sprintf("Mixpanel error: %s", response["error"]))
+				return errors.New(fmt.Sprintf("Mixpanel error: %s", response["error"]))
 			}
 		} else {
 			return errors.New("Could not find field 'status' api change ?")
 		}
 	}
-	return errors.New("Cannot interpret Mixpanel server response: "+buff.String())
+	return errors.New("Cannot interpret Mixpanel server response: " + buff.String())
 }
 
 type StdConsumer struct {
 	endpoints map[string]string
 }
 
-func NewStdConsumer() Consumer {
+// Creates a new StdConsumer.
+// Sends one message at a time
+func NewStdConsumer() *StdConsumer {
 	c := new(StdConsumer)
 	c.endpoints = make(map[string]string)
 	c.endpoints["events"] = events_endpoint
@@ -356,4 +357,77 @@ func (c *StdConsumer) write(endpoint string, msg []byte) error {
 	}
 
 	return parseJsonResponse(resp)
+}
+
+type BuffConsumer struct {
+	StdConsumer
+	buffers map[string][][]byte
+	maxSize int64
+}
+
+func NewBuffConsumer(maxSize int64) *BuffConsumer {
+	bc := new(BuffConsumer)
+	bc.StdConsumer = *NewStdConsumer()
+	bc.maxSize = maxSize
+	bc.buffers = make(map[string][][]byte)
+	bc.buffers["people"] = make([][]byte, 0, maxSize)
+	bc.buffers["events"] = make([][]byte, 0, maxSize)
+	return bc
+}
+
+func (bc *BuffConsumer) Send(endpoint string, msg []byte) error {
+	if _, ok := bc.buffers[endpoint]; !ok {
+		return errors.New(fmt.Sprintf("No such endpoint '%s'. Valid endpoints are one of %#v", endpoint, bc.buffers))
+	}
+	bc.buffers[endpoint] = append(bc.buffers[endpoint], msg)
+	if len(bc.buffers[endpoint]) > int(bc.maxSize) {
+		bc.flushEndpoint(endpoint)
+	}
+	return nil
+}
+
+/*
+Flush Send all remaining messages to Mixpanel. BufferedConsumers will
+flush automatically when you call send(), but you will need to call
+flush() when you are completely done using the consumer (for example,
+when your application exits) to ensure there are no messages remaining
+in memory.
+
+Calls to flush() may raise a MixpanelException if there is a problem
+communicating with the Mixpanel servers. In this case, the exception
+thrown will have a message property, containing the text of the message,
+        and an endpoint property containing the endpoint that failed.
+*/
+func (bc *BuffConsumer) Flush() error {
+	for endpoint := range bc.buffers {
+		bc.flushEndpoint(endpoint)
+	}
+	return nil
+}
+
+func jsonArray(a [][]byte) []byte {
+	sep := ","
+	if len(a) == 0 {
+		return []byte("[]")
+	}
+
+	n := len(sep) * (len(a) - 1)
+	for i := 0; i < len(a); i++ {
+		n += len(a[i])
+	}
+
+	b := make([]byte, n+2)
+	bp := copy(b, []byte{'['})
+	bp += copy(b[bp:], a[0])
+	for _, s := range a[1:] {
+		bp += copy(b[bp:], sep)
+		bp += copy(b[bp:], s)
+	}
+	copy(b[bp:], []byte{']'})
+	return b
+}
+
+func (bc *BuffConsumer) flushEndpoint(endpoint string) error {
+
+	return nil
 }
