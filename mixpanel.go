@@ -15,6 +15,17 @@ import (
 
 type P map[string]interface{}
 
+// Update replaces all the elements of the map
+func (this *P) Update(other *P) *P {
+	if other == nil{
+		return this
+	}
+	for k, v := range *other {
+		(*this)[k] = v
+	}
+	return this
+}
+
 type Event struct {
 	Event      string `json:"event"`
 	Properties *P     `json:"properties"`
@@ -41,22 +52,31 @@ func b64(payload []byte) []byte {
 	return b.Bytes()[:b.Len()]
 }
 
+/*
+NewMixpanel Creates a new Mixpanel object, which can be used for all tracking.
+
+To use mixpanel, create a new Mixpanel object using your
+token.  Takes in a user token and uses a StdConsumer
+ */
 func NewMixpanel(token string) *Mixpanel {
+	return NewMixpanelWithConsumer(token, NewStdConsumer())
+}
+
+/*
+NewMixpanelWithConsumer Creates a new Mixpanel object, which can be used for all tracking.
+
+To use mixpanel, create a new Mixpanel object using your
+token.  Takes in a user token and an optional Consumer (or
+anything else with a send() method). If no consumer is
+provided, Mixpanel will use the default Consumer, which
+communicates one synchronous request for every message.
+ */
+func NewMixpanelWithConsumer(token string, c Consumer) *Mixpanel {
 	return &Mixpanel{
 		Token: token,
 		verbose: true,
-		c: NewStdConsumer(),
+		c: c,
 	}
-}
-
-func (this *P) Update(other *P) *P {
-	if other == nil{
-		return this
-	}
-	for k, v := range *other {
-		(*this)[k] = v
-	}
-	return this
 }
 
 /*
