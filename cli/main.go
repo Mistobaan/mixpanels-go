@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strconv"
 	"strings"
 	"log"
 	"os"
@@ -58,6 +59,58 @@ func main() {
 		} else {
 			check(mp.Alias(cmds[1], cmds[2]))
 		} 
+	case "set":
+		if len(cmds) < 2 {
+			log.Fatal("not enough arguments for set")
+		} else {
+			check(mp.PeopleSet(cmds[1], extractProperties(cmds[1:])))
+		} 
+	case "set_once":
+		if len(cmds) < 2 {
+			log.Fatal("not enough arguments for set_once")
+		} else {
+			check(mp.PeopleSetOnce(cmds[1], extractProperties(cmds[1:])))
+		}
+	case "add":
+		if len(cmds) < 2 {
+			log.Fatal("not enough arguments for add [id] [key=value]*")
+		} else {
+			check(mp.PeopleIncrement(cmds[1], extractProperties(cmds[1:])))
+		}
+	case "append":
+		if len(cmds) < 2 {
+			log.Fatal("not enough arguments for append [id] [key=value]*")
+		} else {
+			check(mp.PeopleAppend(cmds[1], extractProperties(cmds[1:])))
+		}
+	case "union":
+		if len(cmds) < 2 {
+			log.Fatal("not enough arguments for union [id] [key=value]*")
+		} else {
+			check(mp.PeopleUnion(cmds[1], extractProperties(cmds[1:])))
+		}
+	case "unset":
+		if len(cmds) < 2 {
+			log.Fatal("not enough arguments for unset [id] [*values]")
+		} else {
+			check(mp.PeopleUnset(cmds[1], cmds[1:]))
+		}
+	case "delete":
+		if len(cmds) < 2 {
+			log.Fatal("not enough arguments for delete <id>")
+		} else {
+			check(mp.PeopleDelete(cmds[1]))
+		}
+	case "charge":
+		if len(cmds) < 3 {
+			log.Fatal("not enough arguments for delete <id>")
+		} else {
+			amount, err := strconv.ParseFloat(cmds[2], 64)
+			check(err)
+			check(mp.PeopleTrackCharge(cmds[1], amount, extractProperties(cmds[2:])))
+		}
+	case "help":
+		log.Fatal("You are on your own")
 	default:
 		log.Fatalf("Unknown command %s", cmds[0])
 	}
