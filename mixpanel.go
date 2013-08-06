@@ -15,7 +15,7 @@ type P map[string]string
 
 type Event struct {
 	Event      string `json:event`
-	Properties *P      `json:properties`
+	Properties *P     `json:properties`
 }
 
 type Mixpanel struct {
@@ -39,6 +39,14 @@ func NewMixpanel(token string) *Mixpanel {
 	}
 }
 
+func (this *P) Update(other *P) *P {
+	for k, v := range *other {
+		(*this)[k] = v
+	}
+	return this
+}
+
+// Track 
 func (mix *Mixpanel) Track(distinct_id, event string, prop *P) error {
 	track_url, err := url.Parse(track_endpoint)
 	if err != nil {
@@ -69,5 +77,9 @@ func (mix *Mixpanel) Track(distinct_id, event string, prop *P) error {
 	}
 
 	io.Copy(os.Stdout, resp.Body)
+	return nil
+}
+
+func (mp *Mixpanel) Alias(new_internal_id, original_anonymous_id string) error {
 	return nil
 }
