@@ -30,3 +30,18 @@ func TestTrack(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestSmoke(t *testing.T) {
+	mp := NewMixpanel(token)
+	err := mp.PeopleSet("12345", &P{"Address": "1313 Mockingbird Lane",
+                            "Birthday": "1948-01-01"})
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = mp.PeopleSetOnce("12345", &P{"First Login": "2013-04-01T13:20:00"})	
+	if err != nil {
+		t.Error(err)
+	}
+}
+
