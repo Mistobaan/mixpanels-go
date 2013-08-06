@@ -1,3 +1,14 @@
+/*
+The mixpanel module allows you to easily track events and
+update people properties from your python application.
+
+The Mixpanel class is the primary class for tracking events and
+sending people analytics updates.
+
+The StdConsumer and BuffConsumer classes allow callers to
+customize the IO characteristics of their tracking.
+*/
+
 package mixpanel
 
 import (
@@ -388,15 +399,10 @@ func (bc *BuffConsumer) Send(endpoint string, msg []byte) error {
 
 /*
 Flush Send all remaining messages to Mixpanel. BufferedConsumers will
-flush automatically when you call send(), but you will need to call
-flush() when you are completely done using the consumer (for example,
+flush automatically when you call Send(), but you will need to call
+Flush() when you are completely done using the consumer (for example,
 when your application exits) to ensure there are no messages remaining
 in memory.
-
-Calls to flush() may raise a MixpanelException if there is a problem
-communicating with the Mixpanel servers. In this case, the exception
-thrown will have a message property, containing the text of the message,
-        and an endpoint property containing the endpoint that failed.
 */
 func (bc *BuffConsumer) Flush() error {
 	for endpoint := range bc.buffers {
