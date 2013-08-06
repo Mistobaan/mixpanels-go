@@ -39,11 +39,18 @@ func TestJsonArray(t *testing.T){
 	result = jsonArray( [][]byte{ []byte("{'a':'b'}"), []byte("{'c':'d'}")} )
 	if string(result) != "[{'a':'b'},{'c':'d'}]" {
 		t.Error(string(result))
-	}	
+	}
 }
 
-func TestSmoke(t *testing.T) {
-	mp := NewMixpanel(token)
+func TestSmoke(t *testing.T){
+	Smoke(t, NewMixpanel(token))
+	Smoke(t, NewMixpanelWithConsumer(token, NewBuffConsumer(1)))
+	Smoke(t, NewMixpanelWithConsumer(token, NewBuffConsumer(2)))
+}
+
+
+func Smoke(t *testing.T, mp *Mixpanel) {
+
 	err := mp.PeopleSet("12345", &P{"Address": "1313 Mockingbird Lane",
 		"Birthday": "1948-01-01"})
 	if err != nil {

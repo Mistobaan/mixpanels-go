@@ -428,6 +428,6 @@ func jsonArray(a [][]byte) []byte {
 }
 
 func (bc *BuffConsumer) flushEndpoint(endpoint string) error {
-
-	return nil
+	msg := jsonArray(bc.buffers[endpoint])
+	return bc.StdConsumer.Send(endpoint, msg)
 }
