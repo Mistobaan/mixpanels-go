@@ -1,6 +1,6 @@
 /*
 The mixpanel module allows you to easily track events and
-update people properties from your python application.
+update people properties from your Go application.
 
 The Mixpanel class is the primary class for tracking events and
 sending people analytics updates.
