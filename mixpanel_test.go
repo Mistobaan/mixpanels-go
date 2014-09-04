@@ -31,25 +31,24 @@ func TestTrack(t *testing.T) {
 	}
 }
 
-func TestJsonArray(t *testing.T){
-	result := jsonArray( [][]byte{ []byte("{'a':'b'}")} )
+func TestJsonArray(t *testing.T) {
+	result := jsonArray([][]byte{[]byte("{'a':'b'}")})
 	if string(result) != "[{'a':'b'}]" {
 		t.Error(string(result))
 	}
-	result = jsonArray( [][]byte{ []byte("{'a':'b'}"), []byte("{'c':'d'}")} )
+	result = jsonArray([][]byte{[]byte("{'a':'b'}"), []byte("{'c':'d'}")})
 	if string(result) != "[{'a':'b'},{'c':'d'}]" {
 		t.Error(string(result))
 	}
 }
 
-func TestSmoke(t *testing.T){
+func TestSmoke(t *testing.T) {
 	Smoke(t, NewMixpanel(token))
 	Smoke(t, NewMixpanelWithConsumer(token, NewBuffConsumer(1)))
 	mp := NewBuffConsumer(2)
 	Smoke(t, NewMixpanelWithConsumer(token, mp))
 	mp.Flush()
 }
-
 
 func Smoke(t *testing.T, mp *Mixpanel) {
 
@@ -64,6 +63,14 @@ func Smoke(t *testing.T, mp *Mixpanel) {
 		t.Error(err)
 	}
 
+	// Import an older event
+	err = mp.Import("12345", "Welcome Email Sent", &P{
+		"time": 1392646952,
+	})
+	if err != nil {
+		t.Error(err)
+	}
+
 	// Track that user "12345"'s credit card was declined
 	err = mp.Track("12345", "Credit Card Declined", nil)
 	if err != nil {
@@ -73,9 +80,9 @@ func Smoke(t *testing.T, mp *Mixpanel) {
 	// Properties describe the circumstances of the event,
 	// or aspects of the source or user associated with the event
 	err = mp.Track("12345", "Welcome Email Sent", &P{
-	  "Email Template" : "Pretty Pink Welcome",
-	  "User Sign-up Cohort" : "July 2013",
-	 })
+		"Email Template":      "Pretty Pink Welcome",
+		"User Sign-up Cohort": "July 2013",
+	})
 	if err != nil {
 		t.Error(err)
 	}
