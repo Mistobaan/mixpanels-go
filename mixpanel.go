@@ -55,6 +55,8 @@ type Mixpanel struct {
 const events_endpoint string = "https://api.mixpanel.com/track"
 const people_endpoint string = "https://api.mixpanel.com/engage"
 
+var import_endpoint string = "https://api.mixpanel.com/import"
+
 func b64(payload []byte) []byte {
 	var b bytes.Buffer
 	encoder := base64.NewEncoder(base64.URLEncoding, &b)
@@ -108,6 +110,20 @@ mp.Track("12345", "Welcome Email Sent", &P{
  })
 */
 func (mp *Mixpanel) Track(distinct_id, event string, prop *P) error {
+	import_endpoint += "?api_key=" + mp.Token
+	return mp.sendEvent(distinct_id, event, prop, "events")
+}
+
+/*
+Imports events that occurred more than 5 days in the past. Takes the
+same arguments as Track and behaves in the same way.
+*/
+func (mp *Mixpanel) Import(distinct_id, event string, prop *P) error {
+	return mp.sendEvent(distinct_id, event, prop, "import")
+}
+
+/* Internal implementation of event sending. Can be used with Track or Import. */
+func (mp *Mixpanel) sendEvent(distinct_id, event string, prop *P, endpoint string) error {
 	properties := &P{
 		"token":        mp.Token,
 		"distinct_id":  distinct_id,
@@ -129,7 +145,7 @@ func (mp *Mixpanel) Track(distinct_id, event string, prop *P) error {
 		return err
 	}
 
-	return mp.c.Send("events", data)
+	return mp.c.Send(endpoint, data)
 }
 
 /*
@@ -337,6 +353,7 @@ func NewStdConsumer() *StdConsumer {
 	c.endpoints = make(map[string]string)
 	c.endpoints["events"] = events_endpoint
 	c.endpoints["people"] = people_endpoint
+	c.endpoints["import"] = import_endpoint
 	return c
 }
 
@@ -383,6 +400,7 @@ func NewBuffConsumer(maxSize int64) *BuffConsumer {
 	bc.buffers = make(map[string][][]byte)
 	bc.buffers["people"] = make([][]byte, 0, maxSize)
 	bc.buffers["events"] = make([][]byte, 0, maxSize)
+	bc.buffers["import"] = make([][]byte, 0, maxSize)
 	return bc
 }
 
